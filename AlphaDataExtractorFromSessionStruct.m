@@ -1,4 +1,4 @@
-function [alphaDataWithTrialNumbers] = AlphaDataExtractorFromSessionStruct(sessionStruct)
+function [grandAlphaDataBaseWithTrialNumbers] = AlphaDataExtractorFromSessionStruct(sessionStruct)
 
 %This function extracts the alpha value per trial and groups them together,
 %such that the output alphaData contains the trial numbers per alpha group.
@@ -35,6 +35,6 @@ end
 [~, reindex] = sort( str2double( regexp( {tempAlphaData.alphaValue}, '\d+', 'match', 'once' )));
 
 for alphaRestructureIndex = 1:size(tempAlphaData,2)
-    alphaDataWithTrialNumbers(alphaRestructureIndex).alphaValue = tempAlphaData(reindex(alphaRestructureIndex)).alphaValue;
-    alphaDataWithTrialNumbers(alphaRestructureIndex).trialNumbers = tempAlphaData(reindex(alphaRestructureIndex)).trialNumbers;
+    grandAlphaDataBaseWithTrialNumbers(alphaRestructureIndex).alphaValue = tempAlphaData(reindex(alphaRestructureIndex)).alphaValue;
+    grandAlphaDataBaseWithTrialNumbers(alphaRestructureIndex).trialNumbers = tempAlphaData(reindex(alphaRestructureIndex)).trialNumbers;
 end

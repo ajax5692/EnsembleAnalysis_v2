@@ -1,4 +1,4 @@
-function [alphaDataWithTrialNumbers,dffDataAlphaAndFrameWisePerTrial] = ExtractAndSaveDffAlphaDataWithTrialNumsAndFrameNums(EnsembleAnalysisParams)
+function [grandAlphaDatabaseWithTrialNumbers] = ExtractAndSaveDffAlphaDataWithTrialNumsAndFrameNums(EnsembleAnalysisParams)
 
 %This function creates a matrix containing alpha data with corresponding
 %trial numbers and another matrix containing alpha data and corresponding
@@ -15,7 +15,7 @@ load(fileName)
 
 
 %Create an array of already recorded alpha values
-[alphaDataWithTrialNumbers] = AlphaDataExtractorFromSessionStruct(sessionStruct);
+[grandAlphaDatabaseWithTrialNumbers] = AlphaDataExtractorFromSessionStruct(sessionStruct);
 
 
 %The output of this section can be used to cut up the df/f data according
@@ -23,4 +23,4 @@ load(fileName)
 
 dffDataPooled = PoolDffData(EnsembleAnalysisParams.numLayers);
 
-[dffDataAlphaAndFrameWisePerTrial] = GroupAlphaWiseDffPerTrial(dffDataPooled,alphaDataWithTrialNumbers,EnsembleAnalysisParams);
+[grandAlphaDatabaseWithTrialNumbers] = GroupAlphaWiseDffPerTrial(dffDataPooled,grandAlphaDatabaseWithTrialNumbers,EnsembleAnalysisParams);

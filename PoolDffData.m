@@ -4,7 +4,7 @@ function dffDataPooled = PoolDffData(numLayers)
 
 for layerIndex = 1:numLayers
 
-    [fileName filePath] = uigetfile('',strcat('Open the layer', " ", num2str(layerIndex)," ",'analyzed data using the CalciumToSpike GUI'));
+    [fileName filePath] = uigetfile('',strcat('Open the layer', " ", num2str(layerIndex)," ",'data that was obtained using the CalciumToSpike GUI'));
     cd(filePath)
            
     layerData(layerIndex,1) = load(fileName);

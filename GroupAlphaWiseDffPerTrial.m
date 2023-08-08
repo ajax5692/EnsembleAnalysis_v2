@@ -1,4 +1,4 @@
-function [dffDataAlphaAndFrameWisePerTrial] = GroupAlphaWiseDffPerTrial(dffDataPooled,alphaDataWithTrialNumbers,EnsembleAnalysisParams)
+function [grandAlphaDatabaseWithTrialNumbers] = GroupAlphaWiseDffPerTrial(dffDataPooled,grandAlphaDatabaseWithTrialNumbers,EnsembleAnalysisParams)
 
 %This function cuts up the df/f data according to their trial numbers and
 %groups them as per their alpha values.
@@ -6,19 +6,18 @@ function [dffDataAlphaAndFrameWisePerTrial] = GroupAlphaWiseDffPerTrial(dffDataP
 endFrameNumbers = 1:EnsembleAnalysisParams.totalFramesPerUnit:size(dffDataPooled,2);
 alphaCounter = 0;
 
-for alphaIndex = 1:size(alphaDataWithTrialNumbers,2)
+for alphaIndex = 1:size(grandAlphaDatabaseWithTrialNumbers,2)
     
     alphaCounter = alphaCounter + 1;
             
-        for trialIndex = 1:size(alphaDataWithTrialNumbers(alphaIndex).trialNumbers,1)
+        for trialIndex = 1:size(grandAlphaDatabaseWithTrialNumbers(alphaIndex).trialNumbers,1)
             
-            dffDataAlphaAndFrameWisePerTrial(alphaCounter).frameMatrixForAlphaVals(trialIndex,1) = endFrameNumbers(alphaDataWithTrialNumbers(alphaIndex).trialNumbers(trialIndex));
-            dffDataAlphaAndFrameWisePerTrial(alphaCounter).alphaVals = alphaDataWithTrialNumbers(alphaIndex).alphaValue;
+            grandAlphaDatabaseWithTrialNumbers(alphaCounter).frameMatrixForAlphaVals(trialIndex,1) = endFrameNumbers(grandAlphaDatabaseWithTrialNumbers(alphaIndex).trialNumbers(trialIndex));
             
             try
-                dffDataAlphaAndFrameWisePerTrial(alphaCounter).frameMatrixForAlphaVals(trialIndex,2) = endFrameNumbers(alphaDataWithTrialNumbers(alphaIndex).trialNumbers(trialIndex) + 1) - 1;
+                grandAlphaDatabaseWithTrialNumbers(alphaCounter).frameMatrixForAlphaVals(trialIndex,2) = endFrameNumbers(grandAlphaDatabaseWithTrialNumbers(alphaIndex).trialNumbers(trialIndex) + 1) - 1;
             catch
-                dffDataAlphaAndFrameWisePerTrial(alphaCounter).frameMatrixForAlphaVals(trialIndex,2) = size(dffDataPooled,2);
+                grandAlphaDatabaseWithTrialNumbers(alphaCounter).frameMatrixForAlphaVals(trialIndex,2) = size(dffDataPooled,2);
             end
                 
         end

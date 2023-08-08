@@ -1,29 +1,17 @@
-function [alphaDependentDffEnsemble] = AlphaDependentDffForEnsemble(dffDataAlphaAndFrameWisePerTrial,grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams)
+function [reshapedEnsembleDff] = AlphaDependentDffForEnsemble(grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams)
 
-%This function creates a struct called alphaDependentDffEnsemble  with the
-%fieldname 'dffData' having the dimensions n*m*p which respectively 
-%correspond to the number of cell(n), number of trials(m), and number of 
-%frames(p). There is another fieldname 'alphaVals' which indicate which
-%alpha group does the data belong to.
+%This function creates a matrix called reshapedEnsembleDff having the 
+%dimensions n*m*p which respectively correspond to the number of cell(n),
+%number of trials(m), and number of frames(p).
 
 ensembleDff = grandDatabaseForEnsemblevsNonEnsemble.EnsembleCellsDff;
+totalFramesPerUnit = EnsembleAnalysisParams.totalFramesPerUnit;
+totalTrials = size(grandDatabaseForEnsemblevsNonEnsemble.EnsembleCellsDff,2)/totalFramesPerUnit;
 
-for alphaIndex = 1:size(dffDataAlphaAndFrameWisePerTrial,2)
-    
-    for ensembleCellIndex = 1:size(grandDatabaseForEnsemblevsNonEnsemble.EnsembleCellsDff,1)
-        
-        for trialIndex = 1:size(dffDataAlphaAndFrameWisePerTrial(alphaIndex).frameMatrixForAlphaVals,1)
-            
-            dffEnsemble(ensembleCellIndex,trialIndex,:) = ensembleDff(ensembleCellIndex,...
-                                                    dffDataAlphaAndFrameWisePerTrial(alphaIndex).frameMatrixForAlphaVals(trialIndex,1)...
-                                                    :dffDataAlphaAndFrameWisePerTrial(alphaIndex).frameMatrixForAlphaVals(trialIndex,2));
-        
-        end
-        
-    end
-    
-    alphaDependentDffEnsemble(alphaIndex).dffData = dffEnsemble;
-    clear dffEnsemble
-    alphaDependentDffEnsemble(1,alphaIndex).alphaVals = dffDataAlphaAndFrameWisePerTrial(alphaIndex).alphaVals;
-    
+% Reshaping the ensembleDff matrix to match the total frames per
+% trial/unit
+for cellIndex = 1:size(ensembleDff,1)
+    reshapedEnsembleDff(:,:,cellIndex) = reshape(ensembleDff(cellIndex,:),[totalFramesPerUnit,totalTrials])';
 end
+
+reshapedEnsembleDff = permute(reshapedEnsembleDff,[3 1 2]);

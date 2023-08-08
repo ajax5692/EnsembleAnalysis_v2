@@ -22,7 +22,7 @@ function varargout = EnsembleAnalysisGUI(varargin)
 
 % Edit the above text to modify the response to help EnsembleAnalysisGUI
 
-% Last Modified by GUIDE v2.5 03-Aug-2023 15:08:26
+% Last Modified by GUIDE v2.5 07-Aug-2023 12:26:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,20 +60,38 @@ guidata(hObject, handles);
 
 warning off
 
+set(handles.loadSVDoutput,'Enable','off')
 set(handles.EvsNEdFFseparator,'Enable','off')
 set(handles.AlphaDataExtractor,'Enable','off')
-set(handles.ensembleButton,'Enable','on')
+set(handles.ensembleButton,'Enable','off')
+set(handles.nonEnsembleButton,'Enable','off')
+set(handles.loadGrandAlphaDatabaseButton,'Enable','off')
+set(handles.loadReshapedEnsembleDffButton,'Enable','off')
+set(handles.loadReshapedN_EnsembleDffButton,'Enable','off')
 set(handles.plotEnsembleButton,'Enable','off')
+set(handles.plotNonEnsembleButton,'Enable','off')
 
-EnsembleAnalysisParams.originalCodePath = uigetdir('','Define the code repository path first');
-cd(EnsembleAnalysisParams.originalCodePath)
+
 load('ensembleAnalysisParams.mat')
+EnsembleAnalysisParams.saveAnalyzedData = 0;
+EnsembleAnalysisParams.isSaveDataLocationSet = 0;
 EnsembleAnalysisParams.isSVDOutputLoaded = 0;
+EnsembleAnalysisParams.isGrandAlphaDatabaseLoaded = 0;
+EnsembleAnalysisParams.isReshapedEnsembleDffLoaded = 0;
+EnsembleAnalysisParams.isReshapedNonEnsembleDffLoaded = 0;
+EnsembleAnalysisParams.isSaveDataLocationSet = 0;
+EnsembleAnalysisParams.isAlphaDataExtracted = 0;
+EnsembleAnalysisParams.isEnsembleDone = 0;
+EnsembleAnalysisParams.isNonEnsembleDone = 0;
 set(handles.numLayersUserInput,'String',EnsembleAnalysisParams.numLayers)
 set(handles.frameRate,'String',EnsembleAnalysisParams.frameRate)
 set(handles.whichEnsemble,'String',EnsembleAnalysisParams.whichEnsemble)
 set(handles.totalFramesPerUnit,'String',EnsembleAnalysisParams.totalFramesPerUnit)
 
+
+
+EnsembleAnalysisParams.originalCodePath = uigetdir('','Define the code repository path first');
+cd(EnsembleAnalysisParams.originalCodePath)
 save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
 
 % UIWAIT makes EnsembleAnalysisGUI wait for user response (see UIRESUME)
@@ -99,33 +117,27 @@ function loadSVDoutput_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 load('ensembleAnalysisParams.mat')
-try
-    while EnsembleAnalysisParams.isSVDOutputLoaded == 0;
-        [fileName filePath] = uigetfile('','Open the appropriate OUT.mat file');
+while EnsembleAnalysisParams.isSVDOutputLoaded == 0;
+    [fileName filePath] = uigetfile('','Open the appropriate OUT.mat file');
+    if ischar(fileName) == 1
+        EnsembleAnalysisParams.isSaveDataLocationSet = 1;
         cd(filePath)
         load(fileName)
         EnsembleAnalysisParams.coreSVD = OUT.coreSVD;
+        EnsembleAnalysisParams.isSVDOutputLoaded = 1;
         cd(EnsembleAnalysisParams.originalCodePath)
         save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
+        set(handles.loadSVDoutput,'Enable','off')
+        set(handles.loadSVDoutputStatus,'String','SVD OUT loaded','ForegroundColor','green','BackgroundColor','black')
+        set(handles.EvsNEdFFseparator,'Enable','on')
+    else
         EnsembleAnalysisParams.isSVDOutputLoaded = 1;
+        set(handles.GUIstatusBox,'String','SVD Output loading interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+        save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
     end
-    
-    EnsembleAnalysisParams.isSVDOutputLoaded = 0;
-    save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
-        
-    set(handles.loadSVDoutput,'Enable','off')
-    % set(handles.calculateSpike,'Enable','on')
-    % set(handles.calculateDff,'BackgroundColor',[0.9290 0.6940 0.1250]);
-    set(handles.loadSVDoutputStatus,'String','SVD OUT loaded','ForegroundColor','green','BackgroundColor','black')
-    cd(EnsembleAnalysisParams.originalCodePath)
-    set(handles.EvsNEdFFseparator,'Enable','on')
-    
-
-catch
-    disp('SVD Output loading interrupted')
-    resetGUI_Callback(hObject, eventdata, handles)
 end
-
+EnsembleAnalysisParams.isSVDOutputLoaded = 0;
+save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
 
 
 function numLayersUserInput_Callback(hObject, eventdata, handles)
@@ -160,28 +172,26 @@ function EvsNEdFFseparator_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 try
     load('ensembleAnalysisParams.mat')
-    while EnsembleAnalysisParams.isEvsNEgroupingDone == 0;
-        set(handles.EvsNEseparationStatus,'String','E vs NE grouping running','ForegroundColor','red','BackgroundColor','black')
+    while EnsembleAnalysisParams.isEvsNEgroupingDone == 0
+        set(handles.EvsNEseparationStatus,'String','Running','ForegroundColor','red','BackgroundColor','black')
+        set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
         [grandDatabaseForEnsemblevsNonEnsemble] = SeparateAndGroupEvsNEdffData(EnsembleAnalysisParams);
         EnsembleAnalysisParams.isEvsNEgroupingDone = 1;
     end
-    saveFilePath = uigetdir('','Select the folder location to store the analyzed data');
-    cd(saveFilePath)
-    filter = {'*.mat'};
-    [saveFileName,saveFilePath] = uiputfile(filter,'Specify file name to save analyzed data');
-    save(saveFileName,'grandDatabaseForEnsemblevsNonEnsemble')
+    cd(EnsembleAnalysisParams.saveAnalyzedData)
+    save('GrandDatabaseForEnsemblevsNonEnsemble','grandDatabaseForEnsemblevsNonEnsemble')
     cd(EnsembleAnalysisParams.originalCodePath)
     EnsembleAnalysisParams.isEvsNEgroupingDone = 0;
     save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
 
     set(handles.EvsNEdFFseparator,'Enable','off')
-    set(handles.EvsNEseparationStatus,'String','E vs NE grouping done','ForegroundColor','green','BackgroundColor','black')
+    set(handles.EvsNEseparationStatus,'String','Done','ForegroundColor','green','BackgroundColor','black')
     set(handles.AlphaDataExtractor,'Enable','on')
     cd(EnsembleAnalysisParams.originalCodePath)
 
 catch
-    disp('Ensemble vs Non-ensemble data group separation inturrupted')
-    resetGUI_Callback(hObject, eventdata, handles)
+    set(handles.GUIstatusBox,'String','E vs NE data grouping interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.EvsNEseparationStatus,'String','Not yet done','ForegroundColor','red','BackgroundColor','black')
 end
 
 
@@ -242,11 +252,21 @@ function resetGUI_Callback(hObject, eventdata, handles)
 % hObject    handle to resetGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-set(handles.loadSVDoutput,'Enable','on')
+set(handles.loadSVDoutput,'Enable','off')
 set(handles.EvsNEdFFseparator,'Enable','off')
 set(handles.loadSVDoutputStatus,'String','Not yet loaded','ForegroundColor','red')
 set(handles.EvsNEseparationStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.alphaDataExtractionStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.ensembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+set(handles.saveAnalyzedDataLocationButton,'String','Specify save location for analyzed data','BackgroundColor',[0.94 0.94 0.94])
+set(handles.loadReshapedEnsembleDffButton,'Enable','off','String','Load Reshaped Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
+set(handles.loadGrandAlphaDatabaseButton,'Enable','off','String','Load Grand Alpha database','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
+set(handles.ensembleButton,'Enable','off','String','Do Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
+set(handles.nonEnsembleButton,'Enable','off','String','Do Non-Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
+set(handles.plotEnsembleButton,'String','Plot Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
+set(handles.plotNonEnsembleButton,'Enable','off','String','Plot Non-Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
+set(handles.loadReshapedN_EnsembleDffButton,'Enable','off','String','Load Reshaped N_E','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
 
 
 % --- Executes on button press in resetLoadSVDout.
@@ -256,8 +276,20 @@ function resetLoadSVDout_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.loadSVDoutput,'Enable','on')
 set(handles.EvsNEdFFseparator,'Enable','off')
+set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
 set(handles.loadSVDoutputStatus,'String','Not yet loaded','ForegroundColor','red')
 set(handles.EvsNEseparationStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.AlphaDataExtractor,'Enable','off')
+set(handles.alphaDataExtractionStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.ensembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.nonEnsembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.ensembleButton,'Enable','off')
+set(handles.nonEnsembleButton,'Enable','off')
+set(handles.loadGrandAlphaDatabaseButton,'Enable','off')
+set(handles.loadReshapedEnsembleDffButton,'Enable','off')
+set(handles.loadReshapedN_EnsembleDffButton,'Enable','off')
+set(handles.plotEnsembleButton,'Enable','off')
+set(handles.plotNonEnsembleButton,'Enable','off')
 
 
 % --- Executes on button press in resetGroupEvsNEdata.
@@ -268,6 +300,19 @@ function resetGroupEvsNEdata_Callback(hObject, eventdata, handles)
 set(handles.loadSVDoutput,'Enable','off')
 set(handles.EvsNEdFFseparator,'Enable','on')
 set(handles.EvsNEseparationStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+set(handles.EvsNEseparationStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.AlphaDataExtractor,'Enable','off')
+set(handles.alphaDataExtractionStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.ensembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.nonEnsembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.ensembleButton,'Enable','off')
+set(handles.nonEnsembleButton,'Enable','off')
+set(handles.loadGrandAlphaDatabaseButton,'Enable','off')
+set(handles.loadReshapedEnsembleDffButton,'Enable','off')
+set(handles.loadReshapedN_EnsembleDffButton,'Enable','off')
+set(handles.plotEnsembleButton,'Enable','off')
+set(handles.plotNonEnsembleButton,'Enable','off')
 
 
 
@@ -301,17 +346,26 @@ function AlphaDataExtractor_Callback(hObject, eventdata, handles)
 % hObject    handle to AlphaDataExtractor (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-load('ensembleAnalysisParams.mat')
-[alphaDataWithTrialNumbers,dffDataAlphaAndFrameWisePerTrial] = ExtractAndSaveDffAlphaDataWithTrialNumsAndFrameNums(EnsembleAnalysisParams);
-saveFilePath = uigetdir('','Select the location to save the analyzed data');
-cd(saveFilePath)
-filter = {'*.mat'};
-[saveFileName,saveFilePath] = uiputfile(filter,'Specify file name to save analyzed data');
-save(saveFileName, 'alphaDataWithTrialNumbers','dffDataAlphaAndFrameWisePerTrial')
-set(handles.AlphaDataExtractor,'Enable','off')
-set(handles.ensembleButton,'Enable','on')
-set(handles.alphaDataExtractionStatus,'String','Done','ForegroundColor','green','BackgroundColor','black')
-cd(EnsembleAnalysisParams.originalCodePath)
+try
+    load('ensembleAnalysisParams.mat')
+    while EnsembleAnalysisParams.isAlphaDataExtracted == 0
+        set(handles.alphaDataExtractionStatus,'String','Running','ForegroundColor','red','BackgroundColor','black')
+        set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+        [grandAlphaDatabaseWithTrialNumbers] = ExtractAndSaveDffAlphaDataWithTrialNumsAndFrameNums(EnsembleAnalysisParams);
+        EnsembleAnalysisParams.isAlphaDataExtracted = 1;
+    end
+    cd(EnsembleAnalysisParams.saveAnalyzedData)
+    EnsembleAnalysisParams.isAlphaDataExtracted = 0;
+    save('GrandAlphaDatabaseWithTrialNumbers', 'grandAlphaDatabaseWithTrialNumbers')
+    set(handles.AlphaDataExtractor,'Enable','off')
+    set(handles.ensembleButton,'Enable','on')
+    set(handles.nonEnsembleButton,'Enable','on')
+    set(handles.alphaDataExtractionStatus,'String','Done','ForegroundColor','green','BackgroundColor','black')
+    cd(EnsembleAnalysisParams.originalCodePath)
+catch
+    set(handles.GUIstatusBox,'String','Alpha data extraction interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.alphaDataExtractionStatus,'String','Not yet done','ForegroundColor','red','BackgroundColor','black')
+end
 
 % --- Executes on button press in resetAlphaDataExtraction.
 function resetAlphaDataExtraction_Callback(hObject, eventdata, handles)
@@ -320,8 +374,21 @@ function resetAlphaDataExtraction_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.loadSVDoutput,'Enable','off')
 set(handles.EvsNEdFFseparator,'Enable','off')
+set(handles.EvsNEdFFseparator,'Enable','off')
 set(handles.AlphaDataExtractor,'Enable','on')
 set(handles.alphaDataExtractionStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+set(handles.ensembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.nonEnsembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.ensembleButton,'Enable','off')
+set(handles.nonEnsembleButton,'Enable','off')
+set(handles.loadGrandAlphaDatabaseButton,'Enable','off')
+set(handles.loadReshapedEnsembleDffButton,'Enable','off')
+set(handles.loadReshapedN_EnsembleDffButton,'Enable','off')
+set(handles.plotEnsembleButton,'Enable','off')
+set(handles.plotNonEnsembleButton,'Enable','off')
+
+
 
 
 % --- Executes on button press in ensembleButton.
@@ -330,24 +397,26 @@ function ensembleButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 load('ensembleAnalysisParams.mat')
-[fileName,filePath] = uigetfile('*.mat','Select both of the saved files','MultiSelect', 'on');
-cd(filePath)
-for fileIndex=1:size(fileName,2)
-    load(fileName{1,fileIndex})
+try 
+    while EnsembleAnalysisParams.isEnsembleDone == 0
+        cd(EnsembleAnalysisParams.saveAnalyzedData)
+        load('GrandDatabaseForEnsemblevsNonEnsemble.mat')
+        cd(EnsembleAnalysisParams.originalCodePath)
+        [reshapedEnsembleDff] = AlphaDependentDffForEnsemble(grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams);
+        EnsembleAnalysisParams.isEnsembleDone = 1;
+    end
+    cd(EnsembleAnalysisParams.saveAnalyzedData)
+    save('ReshapedEnsembleDff', 'reshapedEnsembleDff')
+    set(handles.ensembleButton,'Enable','off')
+    set(handles.ensembleStatus,'String','Done','ForegroundColor','green','BackgroundColor','black')
+    set(handles.loadGrandAlphaDatabaseButton,'Enable','on')
+    set(handles.loadReshapedEnsembleDffButton,'Enable','on')
+    cd(EnsembleAnalysisParams.originalCodePath)
+catch
+    set(handles.GUIstatusBox,'String','Ensemble grouping interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.ensembleStatus,'String','Not yet done','ForegroundColor','red','BackgroundColor','black')
 end
-cd(EnsembleAnalysisParams.originalCodePath)
-[alphaDependentDffEnsemble] = AlphaDependentDffForEnsemble(dffDataAlphaAndFrameWisePerTrial,...
-                                    grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams);
-saveFilePath = uigetdir('','Select the location to save the analyzed data');
-cd(saveFilePath)
-filter = {'*.mat'};
-[saveFileName,saveFilePath] = uiputfile(filter,'Specify file name to save analyzed data');
-save(saveFileName, 'alphaDependentDffEnsemble')
-set(handles.ensembleButton,'Enable','off')
-set(handles.ensembleStatus,'String','Done','ForegroundColor','green','BackgroundColor','black')
-set(handles.plotEnsembleButton,'Enable','on')
-set(handles.plotEnsembleButton,'BackgroundColor','green')
-cd(EnsembleAnalysisParams.originalCodePath)
+
 
 % --- Executes on button press in resetEnsemble.
 function resetEnsemble_Callback(hObject, eventdata, handles)
@@ -359,6 +428,16 @@ set(handles.EvsNEdFFseparator,'Enable','off')
 set(handles.AlphaDataExtractor,'Enable','off')
 set(handles.ensembleButton,'Enable','on')
 set(handles.ensembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.loadGrandAlphaDatabaseButton,'String','Load Grand Alpha Database','BackgroundColor',[0.94 0.94 0.94])
+set(handles.loadReshapedEnsembleDffButton,'String','Load Reshaped Ensemble','BackgroundColor',[0.94 0.94 0.94])
+set(handles.plotEnsembleButton,'BackgroundColor',[0.94 0.94 0.94])
+
+set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+set(handles.nonEnsembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.loadReshapedN_EnsembleDffButton,'Enable','off')
+set(handles.plotEnsembleButton,'Enable','off')
+set(handles.plotNonEnsembleButton,'Enable','off')
+
 
 
 % --- Executes on button press in plotEnsembleButton.
@@ -367,13 +446,182 @@ function plotEnsembleButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 load('ensembleAnalysisParams.mat')
-[fileName filePath] = uigetfile('*.mat','Select the analyzed alpha dependent ensemble data');
-cd(filePath)
-load(fileName)
-[cellAndTrialAveragedDffPerAlpha] = PlotAlphaDependentMeanResponse(alphaDependentDffEnsemble);
-saveFilePath = uigetdir('','Select the location to save the analyzed data');
-cd(saveFilePath)
-filter = {'*.mat'};
-[saveFileName,saveFilePath] = uiputfile(filter,'Specify file name to save analyzed data');
-save(saveFileName, 'cellAndTrialAveragedDffPerAlpha')
+try
+    cd(EnsembleAnalysisParams.saveAnalyzedData)
+    load('GrandAlphaDatabaseWithTrialNumbers.mat')
+    load('ReshapedEnsembleDff.mat')
+    [grandAlphaDependentCellDff,fEnsemble] = PlotAlphaDependentMeanResponse(reshapedEnsembleDff,grandAlphaDatabaseWithTrialNumbers,EnsembleAnalysisParams);
+    title('Alpha depenent cell and trial averaged Ensemble dF/F')
+    cd(EnsembleAnalysisParams.saveAnalyzedData)
+    save('GrandAlphaDependent_E_CellDff', 'grandAlphaDependentCellDff')
+    saveas(fEnsemble,'AlphaDependentCellAndTrialAveragedEnsembleResponse.fig')
+    cd(EnsembleAnalysisParams.originalCodePath)
+    set(handles.plotEnsembleButton,'BackgroundColor','green')
+catch
+    set(handles.GUIstatusBox,'String','Plot ensemble error','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.plotEnsembleButton,'BackgroundColor',[0.94 0.94 0.94])
+end
+
+
+
+% --- Executes on button press in loadGrandAlphaDatabaseButton.
+function loadGrandAlphaDatabaseButton_Callback(hObject, eventdata, handles)
+% hObject    handle to loadGrandAlphaDatabaseButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+load('ensembleAnalysisParams.mat')
+try
+    while EnsembleAnalysisParams.isGrandAlphaDatabaseLoaded == 0
+        cd(EnsembleAnalysisParams.saveAnalyzedData)
+        load('GrandAlphaDatabaseWithTrialNumbers.mat')
+        set(handles.loadGrandAlphaDatabaseButton,'String','Alpha Database Loaded','BackgroundColor','green')
+        set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+        EnsembleAnalysisParams.isGrandAlphaDatabaseLoaded = 1;
+    end
+catch
+    set(handles.GUIstatusBox,'String','Grand alpha database loading interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.loadGrandAlphaDatabaseButton,'String','Load Grand Alpha Database')
+end
+
+% --- Executes on button press in loadReshapedEnsembleDffButton.
+function loadReshapedEnsembleDffButton_Callback(hObject, eventdata, handles)
+% hObject    handle to loadReshapedEnsembleDffButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+load('ensembleAnalysisParams.mat')
+try
+    while EnsembleAnalysisParams.isReshapedEnsembleDffLoaded == 0
+          cd(EnsembleAnalysisParams.saveAnalyzedData)
+          load('ReshapedEnsembleDff.mat')
+          set(handles.loadReshapedEnsembleDffButton,'String','Reshaped Ensemble Loaded','BackgroundColor','green')
+          set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+          set(handles.plotEnsembleButton,'Enable','on')
+          set(handles.plotEnsembleButton,'BackgroundColor','red')
+          EnsembleAnalysisParams.isReshapedEnsembleDffLoaded = 1;
+    end
+catch
+    set(handles.GUIstatusBox,'String','Reshaped ensemble loading interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.loadReshapedEnsembleDffButton,'String','Load Reshaped Ensemble dF/F')
+end
+
+
+
+% --- Executes on button press in saveAnalyzedDataLocationButton.
+function saveAnalyzedDataLocationButton_Callback(hObject, eventdata, handles)
+% hObject    handle to saveAnalyzedDataLocationButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+load('ensembleAnalysisParams.mat')
+while EnsembleAnalysisParams.isSaveDataLocationSet == 0
+    EnsembleAnalysisParams.saveAnalyzedData = uigetdir('','Specify the location to save all analyzed data');
+    if ischar(EnsembleAnalysisParams.saveAnalyzedData) == 1
+        EnsembleAnalysisParams.isSaveDataLocationSet = 1;
+        set(handles.loadSVDoutput,'Enable','on')
+        cd(EnsembleAnalysisParams.originalCodePath)
+        save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
+        set(handles.saveAnalyzedDataLocationButton,'String','Save location specified','BackgroundColor','green')
+        set(handles.loadSVDoutput,'Enable','on')
+    else
+        EnsembleAnalysisParams.isSaveDataLocationSet = 1;
+        save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
+        set(handles.GUIstatusBox,'String','Analyzed data save location not specified','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    end
+end
 cd(EnsembleAnalysisParams.originalCodePath)
+EnsembleAnalysisParams.isSaveDataLocationSet = 0;
+save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
+
+
+% --- Executes on button press in nonEnsembleButton.
+function nonEnsembleButton_Callback(hObject, eventdata, handles)
+% hObject    handle to nonEnsembleButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+load('ensembleAnalysisParams.mat')
+try
+    while EnsembleAnalysisParams.isNonEnsembleDone == 0
+        cd(EnsembleAnalysisParams.saveAnalyzedData)
+        load('GrandDatabaseForEnsemblevsNonEnsemble.mat')
+        cd(EnsembleAnalysisParams.originalCodePath)
+        [reshapedNonEnsembleDff] = AlphaDependentDffForNonEnsemble(grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams);
+        EnsembleAnalysisParams.isNonEnsembleDone = 1;
+    end
+    cd(EnsembleAnalysisParams.saveAnalyzedData)
+    save('ReshapedNonEnsembleDff', 'reshapedNonEnsembleDff')
+    set(handles.nonEnsembleButton,'Enable','off')
+    set(handles.nonEnsembleStatus,'String','Done','ForegroundColor','green','BackgroundColor','black')
+    set(handles.loadReshapedN_EnsembleDffButton,'Enable','on')
+    
+    cd(EnsembleAnalysisParams.originalCodePath)
+catch
+    set(handles.GUIstatusBox,'String','Non-Ensemble grouping interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.nonEnsembleStatus,'String','Not yet done','ForegroundColor','red','BackgroundColor','black')
+end
+
+
+% --- Executes on button press in resetNonEnsemble.
+function resetNonEnsemble_Callback(hObject, eventdata, handles)
+% hObject    handle to resetNonEnsemble (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.loadSVDoutput,'Enable','off')
+set(handles.EvsNEdFFseparator,'Enable','off')
+set(handles.AlphaDataExtractor,'Enable','off')
+set(handles.ensembleButton,'Enable','off')
+set(handles.nonEnsembleButton,'Enable','on')
+set(handles.loadReshapedN_EnsembleDffButton,'Enable','off','BackgroundColor',[0.94 0.94 0.94])
+set(handles.plotNonEnsembleButton,'Enable','off','BackgroundColor',[0.94 0.94 0.94])
+set(handles.nonEnsembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.loadReshapedN_EnsembleDffButton,'String','Load Reshaped Ensemble','BackgroundColor',[0.94 0.94 0.94])
+set(handles.plotNonEnsembleButton,'BackgroundColor',[0.94 0.94 0.94])
+
+set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+set(handles.nonEnsembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.nonEnsembleButton,'Enable','on')
+set(handles.loadReshapedN_EnsembleDffButton,'Enable','off')
+set(handles.plotNonEnsembleButton,'Enable','off')
+
+
+% --- Executes on button press in plotNonEnsembleButton.
+function plotNonEnsembleButton_Callback(hObject, eventdata, handles)
+% hObject    handle to plotNonEnsembleButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+load('ensembleAnalysisParams.mat')
+try
+    cd(EnsembleAnalysisParams.saveAnalyzedData)
+    load('GrandAlphaDatabaseWithTrialNumbers.mat')
+    load('ReshapedNonEnsembleDff.mat')
+    [grandAlphaDependentCellDff,fN_Ensemble] = PlotAlphaDependentMeanResponse(reshapedNonEnsembleDff,grandAlphaDatabaseWithTrialNumbers,EnsembleAnalysisParams);
+    title('Alpha depenent cell and trial averaged Non-Ensemble dF/F')
+    cd(EnsembleAnalysisParams.saveAnalyzedData)
+    save('GrandAlphaDependent_NE_CellDff', 'grandAlphaDependentCellDff')
+    saveas(fN_Ensemble,'AlphaDependentCellAndTrialAveragedNonEnsembleResponse.fig')
+    cd(EnsembleAnalysisParams.originalCodePath)
+    set(handles.plotNonEnsembleButton,'BackgroundColor','green')
+catch
+    set(handles.GUIstatusBox,'String','Plot non-ensemble error','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.plotNonEnsembleButton,'BackgroundColor',[0.94 0.94 0.94])
+end
+
+
+% --- Executes on button press in loadReshapedN_EnsembleDffButton.
+function loadReshapedN_EnsembleDffButton_Callback(hObject, eventdata, handles)
+% hObject    handle to loadReshapedN_EnsembleDffButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+load('ensembleAnalysisParams.mat')
+try
+    while EnsembleAnalysisParams.isReshapedNonEnsembleDffLoaded == 0
+        cd(EnsembleAnalysisParams.saveAnalyzedData)
+        load('ReshapedNonEnsembleDff.mat')
+        set(handles.loadReshapedN_EnsembleDffButton,'String','Reshaped N_Ensemble Loaded','BackgroundColor','green')
+        set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+        set(handles.plotNonEnsembleButton,'Enable','on')
+        set(handles.plotNonEnsembleButton,'BackgroundColor','red')
+        EnsembleAnalysisParams.isReshapedNonEnsembleDffLoaded = 1;
+    end
+catch
+    set(handles.GUIstatusBox,'String','Reshaped non-ensemble loading interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.loadReshapedN_EnsembleDffButton,'String','Load Reshaped N_Ensemble')
+end
