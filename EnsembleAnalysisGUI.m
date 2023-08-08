@@ -22,7 +22,7 @@ function varargout = EnsembleAnalysisGUI(varargin)
 
 % Edit the above text to modify the response to help EnsembleAnalysisGUI
 
-% Last Modified by GUIDE v2.5 07-Aug-2023 12:26:48
+% Last Modified by GUIDE v2.5 08-Aug-2023 14:43:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -87,6 +87,8 @@ set(handles.numLayersUserInput,'String',EnsembleAnalysisParams.numLayers)
 set(handles.frameRate,'String',EnsembleAnalysisParams.frameRate)
 set(handles.whichEnsemble,'String',EnsembleAnalysisParams.whichEnsemble)
 set(handles.totalFramesPerUnit,'String',EnsembleAnalysisParams.totalFramesPerUnit)
+set(handles.visStimStart,'String',EnsembleAnalysisParams.visStimStartFrame)
+set(handles.visStimEnd,'String',EnsembleAnalysisParams.visStimEndFrame)
 
 
 
@@ -624,4 +626,56 @@ try
 catch
     set(handles.GUIstatusBox,'String','Reshaped non-ensemble loading interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
     set(handles.loadReshapedN_EnsembleDffButton,'String','Load Reshaped N_Ensemble')
+end
+
+
+
+function visStimStart_Callback(hObject, eventdata, handles)
+% hObject    handle to visStimStart (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of visStimStart as text
+%        str2double(get(hObject,'String')) returns contents of visStimStart as a double
+load('ensembleAnalysisParams.mat')
+EnsembleAnalysisParams.EnsembleAnalysisParams.visStimStartFrame = str2double(get(hObject,'String'));
+save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
+
+
+% --- Executes during object creation, after setting all properties.
+function visStimStart_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to visStimStart (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function visStimEnd_Callback(hObject, eventdata, handles)
+% hObject    handle to visStimEnd (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of visStimEnd as text
+%        str2double(get(hObject,'String')) returns contents of visStimEnd as a double
+load('ensembleAnalysisParams.mat')
+EnsembleAnalysisParams.EnsembleAnalysisParams.visStimEndFrame = str2double(get(hObject,'String'));
+save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
+
+
+% --- Executes during object creation, after setting all properties.
+function visStimEnd_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to visStimEnd (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
