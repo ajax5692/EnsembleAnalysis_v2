@@ -21,3 +21,8 @@ for alphaIndex = 1:size(grandAlphaDatabaseWithTrialNumbers,2)
     cellWiseAlphaDependentTrialAveragedResponse(:,:,alphaIndex) = permute(mean(alphaDependentCellDff,2),[1 3 2]);
 
 end
+
+
+saveLocationDir = uigetdir();
+cd(saveLocationDir)
+save('CellWiseAlphaDependentTrialAveragedResponse.mat','cellWiseAlphaDependentTrialAveragedResponse')

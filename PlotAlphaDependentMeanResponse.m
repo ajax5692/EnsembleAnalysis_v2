@@ -34,5 +34,7 @@ hold on
 xlim([0 EnsembleAnalysisParams.totalFramesPerUnit])
 xregion(EnsembleAnalysisParams.visStimStartFrame,EnsembleAnalysisParams.visStimEndFrame)
 legend(Legend)
+xlabel('Frame #')
+ylabel('∆F/F')
 % hleg = legend('show');
 % hleg.String(end) = [];

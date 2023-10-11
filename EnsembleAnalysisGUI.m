@@ -260,13 +260,14 @@ set(handles.loadSVDoutputStatus,'String','Not yet loaded','ForegroundColor','red
 set(handles.EvsNEseparationStatus,'String','Not yet done','ForegroundColor','red')
 set(handles.alphaDataExtractionStatus,'String','Not yet done','ForegroundColor','red')
 set(handles.ensembleStatus,'String','Not yet done','ForegroundColor','red')
+set(handles.nonEnsembleStatus,'String','Not yet done','ForegroundColor','red')
 set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
 set(handles.saveAnalyzedDataLocationButton,'String','Specify save location for analyzed data','BackgroundColor',[0.94 0.94 0.94])
 set(handles.loadReshapedEnsembleDffButton,'Enable','off','String','Load Reshaped Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
 set(handles.loadGrandAlphaDatabaseButton,'Enable','off','String','Load Grand Alpha database','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
 set(handles.ensembleButton,'Enable','off','String','Do Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
 set(handles.nonEnsembleButton,'Enable','off','String','Do Non-Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
-set(handles.plotEnsembleButton,'String','Plot Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
+set(handles.plotEnsembleButton,'String','Plot Ensemble','Enable','off','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
 set(handles.plotNonEnsembleButton,'Enable','off','String','Plot Non-Ensemble','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
 set(handles.loadReshapedN_EnsembleDffButton,'Enable','off','String','Load Reshaped N_E','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
 
@@ -404,7 +405,7 @@ try
         cd(EnsembleAnalysisParams.saveAnalyzedData)
         load('GrandDatabaseForEnsemblevsNonEnsemble.mat')
         cd(EnsembleAnalysisParams.originalCodePath)
-        [reshapedEnsembleDff] = AlphaDependentDffForEnsemble(grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams);
+        [reshapedEnsembleDff] = alphaDependentDffForEnsemble(grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams);
         EnsembleAnalysisParams.isEnsembleDone = 1;
     end
     cd(EnsembleAnalysisParams.saveAnalyzedData)
@@ -452,10 +453,10 @@ try
     cd(EnsembleAnalysisParams.saveAnalyzedData)
     load('GrandAlphaDatabaseWithTrialNumbers.mat')
     load('ReshapedEnsembleDff.mat')
-    [grandAlphaDependentCellDff,fEnsemble] = PlotAlphaDependentMeanResponse(reshapedEnsembleDff,grandAlphaDatabaseWithTrialNumbers,EnsembleAnalysisParams);
+    [grandAlphaDependentCellDff_E,fEnsemble] = PlotAlphaDependentMeanResponse(reshapedEnsembleDff,grandAlphaDatabaseWithTrialNumbers,EnsembleAnalysisParams);
     title('Alpha depenent cell and trial averaged Ensemble dF/F')
     cd(EnsembleAnalysisParams.saveAnalyzedData)
-    save('GrandAlphaDependent_E_CellDff', 'grandAlphaDependentCellDff')
+    save('GrandAlphaDependent_E_CellDff', 'grandAlphaDependentCellDff_E')
     saveas(fEnsemble,'AlphaDependentCellAndTrialAveragedEnsembleResponse.fig')
     cd(EnsembleAnalysisParams.originalCodePath)
     set(handles.plotEnsembleButton,'BackgroundColor','green')
@@ -518,7 +519,17 @@ while EnsembleAnalysisParams.isSaveDataLocationSet == 0
     EnsembleAnalysisParams.saveAnalyzedData = uigetdir('','Specify the location to save all analyzed data');
     if ischar(EnsembleAnalysisParams.saveAnalyzedData) == 1
         EnsembleAnalysisParams.isSaveDataLocationSet = 1;
-        set(handles.loadSVDoutput,'Enable','on')
+        cd(EnsembleAnalysisParams.saveAnalyzedData)
+        mkdir('AnalyzedEnsembleVsNonEnsembleData')
+        cd(strcat(EnsembleAnalysisParams.saveAnalyzedData,'\AnalyzedEnsembleVsNonEnsembleData'))
+        analysisParams.frameRate = EnsembleAnalysisParams.frameRate;
+        analysisParams.framePerTrial = EnsembleAnalysisParams.totalFramesPerUnit;
+        analysisParams.visStimStartFrameNum = EnsembleAnalysisParams.visStimStartFrame;
+        analysisParams.visStimEndFrameNum = EnsembleAnalysisParams.visStimEndFrame;
+        analysisParams.whichEnsembleAnalyzed = EnsembleAnalysisParams.whichEnsemble;
+        save('AnalysisParams','analysisParams')
+
+        EnsembleAnalysisParams.saveAnalyzedData = strcat(EnsembleAnalysisParams.saveAnalyzedData,'\AnalyzedEnsembleVsNonEnsembleData');
         cd(EnsembleAnalysisParams.originalCodePath)
         save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
         set(handles.saveAnalyzedDataLocationButton,'String','Save location specified','BackgroundColor','green')
@@ -545,7 +556,7 @@ try
         cd(EnsembleAnalysisParams.saveAnalyzedData)
         load('GrandDatabaseForEnsemblevsNonEnsemble.mat')
         cd(EnsembleAnalysisParams.originalCodePath)
-        [reshapedNonEnsembleDff] = AlphaDependentDffForNonEnsemble(grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams);
+        [reshapedNonEnsembleDff] = alphaDependentDffForNonEnsemble(grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams);
         EnsembleAnalysisParams.isNonEnsembleDone = 1;
     end
     cd(EnsembleAnalysisParams.saveAnalyzedData)
@@ -594,10 +605,10 @@ try
     cd(EnsembleAnalysisParams.saveAnalyzedData)
     load('GrandAlphaDatabaseWithTrialNumbers.mat')
     load('ReshapedNonEnsembleDff.mat')
-    [grandAlphaDependentCellDff,fN_Ensemble] = PlotAlphaDependentMeanResponse(reshapedNonEnsembleDff,grandAlphaDatabaseWithTrialNumbers,EnsembleAnalysisParams);
+    [grandAlphaDependentCellDff_NE,fN_Ensemble] = PlotAlphaDependentMeanResponse(reshapedNonEnsembleDff,grandAlphaDatabaseWithTrialNumbers,EnsembleAnalysisParams);
     title('Alpha depenent cell and trial averaged Non-Ensemble dF/F')
     cd(EnsembleAnalysisParams.saveAnalyzedData)
-    save('GrandAlphaDependent_NE_CellDff', 'grandAlphaDependentCellDff')
+    save('GrandAlphaDependent_NE_CellDff', 'grandAlphaDependentCellDff_NE')
     saveas(fN_Ensemble,'AlphaDependentCellAndTrialAveragedNonEnsembleResponse.fig')
     cd(EnsembleAnalysisParams.originalCodePath)
     set(handles.plotNonEnsembleButton,'BackgroundColor','green')
