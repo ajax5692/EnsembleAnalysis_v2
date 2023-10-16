@@ -22,7 +22,7 @@ function varargout = EnsembleAnalysisGUI(varargin)
 
 % Edit the above text to modify the response to help EnsembleAnalysisGUI
 
-% Last Modified by GUIDE v2.5 16-Oct-2023 13:25:09
+% Last Modified by GUIDE v2.5 16-Oct-2023 17:18:58
 
 % Begin initialization code - DO NOT EDIT
 p = mfilename('fullpath');
@@ -474,13 +474,8 @@ function resetGUI_Callback(hObject, eventdata, handles)
 % hObject    handle to resetGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-set(handles.performAnalysisButton,'Enable','off')
+set(handles.performAnalysisButton,'Enable','off','String','Perform Analysis','BackgroundColor',[0.94 0.94 0.94])
 set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
 set(handles.saveAnalyzedDataLocationButton,'String','Specify save location for analyzed data','FontWeight','bold','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
 w = multiWaitbar('Overall Progress','Reset','Close');
 w = multiWaitbar('Calculating dF/F','Reset','Close');
-
-
-
-
-
