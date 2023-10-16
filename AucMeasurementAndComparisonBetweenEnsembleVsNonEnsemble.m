@@ -74,7 +74,7 @@ end
 set(gca,'XTickLabel',{'Ensemble','Non-Ensemble'});
 ylabel('AUC')
 legend(Legend_barPlot)
-title('Comparison of AUC values for Ensemble vs Non-Ensemble cells in group#1 across different alpha values (m998, 2022-12-14)')
+title('Comparison of AUC values for Ensemble vs Non-Ensemble cells in group#2 across different alpha values (m1107, 2023-08-24)')
 
 hold off
 

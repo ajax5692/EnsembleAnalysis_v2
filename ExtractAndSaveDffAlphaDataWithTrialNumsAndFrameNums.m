@@ -21,6 +21,6 @@ load(fileName)
 %The output of this section can be used to cut up the df/f data according
 %to their trial numbers.
 
-dffDataPooled = PoolDffData(EnsembleAnalysisParams.numLayers);
+dffDataPooled = PoolDffData(EnsembleAnalysisParams);
 
 [grandAlphaDatabaseWithTrialNumbers] = GroupAlphaWiseDffPerTrial(dffDataPooled,grandAlphaDatabaseWithTrialNumbers,EnsembleAnalysisParams);
