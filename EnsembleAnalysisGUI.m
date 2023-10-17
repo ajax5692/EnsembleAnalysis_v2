@@ -64,6 +64,7 @@ warning off
 set(handles.performAnalysisButton,'Enable','off')
 
 load('ensembleAnalysisParams.mat')
+EnsembleAnalysisParams.originalCodePath = pwd;
 EnsembleAnalysisParams.saveAnalyzedData = 0;
 EnsembleAnalysisParams.isSaveDataLocationSet = 0;
 EnsembleAnalysisParams.isSVDOutputLoaded = 0;
