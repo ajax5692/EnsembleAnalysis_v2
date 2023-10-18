@@ -9,9 +9,9 @@ function [grandAlphaDatabaseWithTrialNumbers] = ExtractAndSaveDffAlphaDataWithTr
 
 %Load the sessionStruct data containing the timestamps of the behavStruct
 %and alpha values
-[fileName filePath] = uigetfile('','Select the appropriate sessionStruct file to open');
-cd(filePath)
-load(fileName)
+lastBackslashIndex = find(EnsembleAnalysisParams.sessionStructPath == '\', 1, 'last');
+cd(EnsembleAnalysisParams.sessionStructPath(1:lastBackslashIndex - 1))
+load(EnsembleAnalysisParams.sessionStructPath(lastBackslashIndex + 1:end))
 
 
 %Create an array of already recorded alpha values

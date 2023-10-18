@@ -22,7 +22,7 @@ function varargout = EnsembleAnalysisGUI(varargin)
 
 % Edit the above text to modify the response to help EnsembleAnalysisGUI
 
-% Last Modified by GUIDE v2.5 16-Oct-2023 17:18:58
+% Last Modified by GUIDE v2.5 18-Oct-2023 10:33:53
 
 % Begin initialization code - DO NOT EDIT
 p = mfilename('fullpath');
@@ -62,6 +62,7 @@ guidata(hObject, handles);
 warning off
 
 set(handles.performAnalysisButton,'Enable','off')
+set(handles.loadSessionStructButton,'Enable','off')
 
 load('ensembleAnalysisParams.mat')
 EnsembleAnalysisParams.originalCodePath = pwd;
@@ -76,6 +77,8 @@ EnsembleAnalysisParams.isAlphaDataExtracted = 0;
 EnsembleAnalysisParams.isEnsembleDone = 0;
 EnsembleAnalysisParams.isNonEnsembleDone = 0;
 EnsembleAnalysisParams.layerDataPath(:) = [];
+EnsembleAnalysisParams.isSessionStructLoaded = 0;
+EnsembleAnalysisParams.sessionStructPath = [];
 set(handles.numLayersUserInput,'String',EnsembleAnalysisParams.numLayers)
 set(handles.frameRate,'String',EnsembleAnalysisParams.frameRate)
 set(handles.whichEnsemble,'String',EnsembleAnalysisParams.whichEnsemble)
@@ -130,11 +133,13 @@ while EnsembleAnalysisParams.isSaveDataLocationSet == 0
         cd(EnsembleAnalysisParams.originalCodePath)
         save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
         set(handles.saveAnalyzedDataLocationButton,'String','Save location specified','BackgroundColor','green')
-        set(handles.performAnalysisButton,'Enable','on','String','Perform analysis','ForegroundColor','black','FontWeight','bold')
+        set(handles.GUIstatusBox,'String','No issues')
+        set(handles.loadSessionStructButton,'Enable','on','BackgroundColor',[0.94 0.94 0.94])
     else
         EnsembleAnalysisParams.isSaveDataLocationSet = 1;
         save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
-        set(handles.GUIstatusBox,'String','Analyzed data save location not specified','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+        set(handles.GUIstatusBox,'String','Analyzed data save location not specified','ForegroundColor','yellow','FontWeight','bold')
+        set(handles.loadSessionStructButton,'Enable','off','BackgroundColor',[0.94 0.94 0.94])
     end
 end
 cd(EnsembleAnalysisParams.originalCodePath)
@@ -217,7 +222,7 @@ while EnsembleAnalysisParams.isSVDOutputLoaded == 0;
         save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')        
     else
         EnsembleAnalysisParams.isSVDOutputLoaded = 1;
-        set(handles.GUIstatusBox,'String','SVD Output loading interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+        set(handles.GUIstatusBox,'String','SVD Output loading interrupted','ForegroundColor','yellow','FontWeight','bold')
         save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
         set(handles.performAnalysisButton,'String','Analysis interrupted','ForegroundColor','black','FontWeight','bold')
     end
@@ -230,7 +235,7 @@ w = multiWaitbar('Overall Progress',0.25);
 try
     load('ensembleAnalysisParams.mat')
     while EnsembleAnalysisParams.isEvsNEgroupingDone == 0
-        set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+        set(handles.GUIstatusBox,'String','No issues','ForegroundColor','yellow','FontWeight','bold')
         [grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams] = SeparateAndGroupEvsNEdffData(EnsembleAnalysisParams);
         EnsembleAnalysisParams.isEvsNEgroupingDone = 1;
     end
@@ -243,7 +248,7 @@ try
     cd(EnsembleAnalysisParams.originalCodePath)
 
 catch
-    set(handles.GUIstatusBox,'String','E vs NE data grouping interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.GUIstatusBox,'String','E vs NE data grouping interrupted','ForegroundColor','yellow','FontWeight','bold')
     set(handles.performAnalysisButton,'String','Analysis interrupted','ForegroundColor','black','FontWeight','bold')
     cd(EnsembleAnalysisParams.originalCodePath)
     save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
@@ -256,7 +261,7 @@ w = multiWaitbar('Overall Progress',0.375);
 try
     load('ensembleAnalysisParams.mat')
     while EnsembleAnalysisParams.isAlphaDataExtracted == 0
-        set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+        set(handles.GUIstatusBox,'String','No issues','ForegroundColor','yellow','FontWeight','bold')
         [grandAlphaDatabaseWithTrialNumbers] = ExtractAndSaveDffAlphaDataWithTrialNumsAndFrameNums(EnsembleAnalysisParams);
         EnsembleAnalysisParams.isAlphaDataExtracted = 1;
     end
@@ -265,7 +270,7 @@ try
     save('GrandAlphaDatabaseWithTrialNumbers', 'grandAlphaDatabaseWithTrialNumbers')
     cd(EnsembleAnalysisParams.originalCodePath)
 catch
-    set(handles.GUIstatusBox,'String','Alpha data extraction interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.GUIstatusBox,'String','Alpha data extraction interrupted','ForegroundColor','yellow','FontWeight','bold')
     set(handles.performAnalysisButton,'String','Analysis interrupted','ForegroundColor','black','FontWeight','bold')
     cd(EnsembleAnalysisParams.originalCodePath)
     save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
@@ -289,7 +294,7 @@ try
     save('ReshapedEnsembleDff', 'reshapedEnsembleDff')
     cd(EnsembleAnalysisParams.originalCodePath)
 catch
-    set(handles.GUIstatusBox,'String','Ensemble grouping interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.GUIstatusBox,'String','Ensemble grouping interrupted','ForegroundColor','yellow','FontWeight','bold')
     set(handles.performAnalysisButton,'String','Analysis interrupted','ForegroundColor','black','FontWeight','bold')
     cd(EnsembleAnalysisParams.originalCodePath)
     save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
@@ -313,7 +318,7 @@ try
     save('ReshapedNonEnsembleDff', 'reshapedNonEnsembleDff')
     cd(EnsembleAnalysisParams.originalCodePath)
 catch
-    set(handles.GUIstatusBox,'String','Non-Ensemble grouping interrupted','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.GUIstatusBox,'String','Non-Ensemble grouping interrupted','ForegroundColor','yellow','FontWeight','bold')
     set(handles.performAnalysisButton,'String','Analysis interrupted','ForegroundColor','black','FontWeight','bold')
     cd(EnsembleAnalysisParams.originalCodePath)
     save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
@@ -334,7 +339,7 @@ try
     saveas(fEnsemble,'AlphaDependentCellAndTrialAveragedEnsembleResponse.fig')
     cd(EnsembleAnalysisParams.originalCodePath)
 catch
-    set(handles.GUIstatusBox,'String','Plot ensemble error','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.GUIstatusBox,'String','Plot ensemble error','ForegroundColor','yellow','FontWeight','bold')
     set(handles.performAnalysisButton,'String','Analysis interrupted','ForegroundColor','black','FontWeight','bold')
     cd(EnsembleAnalysisParams.originalCodePath)
     save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
@@ -356,7 +361,7 @@ try
     cd(EnsembleAnalysisParams.originalCodePath)
     set(handles.performAnalysisButton,'String','Analysis complete','ForegroundColor','black','FontWeight','bold','Backgroundcolor','green')
 catch
-    set(handles.GUIstatusBox,'String','Plot non-ensemble error','ForegroundColor',[0.64 0.08 0.18],'FontWeight','bold')
+    set(handles.GUIstatusBox,'String','Plot non-ensemble error','ForegroundColor','yellow','FontWeight','bold')
     set(handles.performAnalysisButton,'String','Analysis interrupted','ForegroundColor','black','FontWeight','bold')
     cd(EnsembleAnalysisParams.originalCodePath)
     save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
@@ -476,7 +481,37 @@ function resetGUI_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.performAnalysisButton,'Enable','off','String','Perform Analysis','BackgroundColor',[0.94 0.94 0.94])
-set(handles.GUIstatusBox,'String','No issues','ForegroundColor','black','FontWeight','bold')
+set(handles.GUIstatusBox,'String','No issues','ForegroundColor','yellow','FontWeight','bold')
+set(handles.loadSessionStructButton,'Enable','off','String','Load sessionStruct','ForegroundColor','black','FontWeight','bold','BackgroundColor',[0.94 0.94 0.94])
 set(handles.saveAnalyzedDataLocationButton,'String','Specify save location for analyzed data','FontWeight','bold','ForegroundColor','black','BackgroundColor',[0.94 0.94 0.94])
 w = multiWaitbar('Overall Progress','Reset','Close');
-w = multiWaitbar('Calculating dF/F','Reset','Close');
+
+
+
+% --- Executes on button press in loadSessionStructButton.
+function loadSessionStructButton_Callback(hObject, eventdata, handles)
+% hObject    handle to loadSessionStructButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+load('ensembleAnalysisParams.mat')
+while EnsembleAnalysisParams.isSessionStructLoaded == 0
+    [fileName filePath] = uigetfile('','Select the appropriate sessionStruct file to open');
+    if ischar(fileName) == 1
+        EnsembleAnalysisParams.isSessionStructLoaded = 1;
+        EnsembleAnalysisParams.sessionStructPath = strcat(filePath,fileName);
+        cd(EnsembleAnalysisParams.originalCodePath)
+        save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
+        set(handles.loadSessionStructButton,'String','sessionStruct Loaded','BackgroundColor','green')
+        set(handles.performAnalysisButton,'Enable','on')
+    else
+        EnsembleAnalysisParams.isSessionStructLoaded = 1;
+        set(handles.GUIstatusBox,'String','sessionStruct loading interrupted','ForegroundColor','yellow','FontWeight','bold')
+        set(handles.loadSessionStructButton,'String','Load sessionStruct','BackgroundColor',[0.94 0.94 0.94])
+        set(handles.performAnalysisButton,'Enable','off')
+        cd(EnsembleAnalysisParams.originalCodePath)
+        save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
+    end
+end
+EnsembleAnalysisParams.isSessionStructLoaded = 0;
+cd(EnsembleAnalysisParams.originalCodePath)
+save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')
