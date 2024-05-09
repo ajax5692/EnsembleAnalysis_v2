@@ -5,6 +5,7 @@ function [grandDatabaseForEnsemblevsNonEnsemble,EnsembleAnalysisParams] = Separa
 % comparison.
 
 coreSVD = EnsembleAnalysisParams.coreSVD;
+poolSVDcoords = EnsembleAnalysisParams.poolSVDcoords;
 numLayers = EnsembleAnalysisParams.numLayers;
 
 whichEnsemble = EnsembleAnalysisParams.whichEnsemble;
@@ -14,14 +15,11 @@ whichEnsemble = EnsembleAnalysisParams.whichEnsemble;
 [dffDataPooled,EnsembleAnalysisParams] = PoolDffData(EnsembleAnalysisParams);
 
 
-f = uifigure;
-f.Position(3:4) = [400 100];
-d = uiprogressdlg(f,'Title','Running SeparateAndGroupEvsNEdffData.m','Indeterminate','on');
 %Get the dF/F and the spike raster for ensemble group
 [ensembleDff] = GroupingEnsembleDffAndSpikeData(coreSVD,whichEnsemble,dffDataPooled);
 
 %Get the dF/F and the spike raster for non-ensemble
-[nonEnsembleDff] = GroupingNonEnsembleDffAndSpikeData(coreSVD,whichEnsemble,dffDataPooled);
+[nonEnsembleDff] = GroupingNonEnsembleDffAndSpikeData(coreSVD,whichEnsemble,dffDataPooled,poolSVDcoords);
 
 %Cutting the whole trace based of individual units/trials (FOR ENSEMBLE GROUP)
 [cutUpEnsembleCellsDff,unitChunks] = TrialWiseDffAndSpikeCutUpEnsemble(EnsembleAnalysisParams,dffDataPooled,ensembleDff);
@@ -29,9 +27,9 @@ d = uiprogressdlg(f,'Title','Running SeparateAndGroupEvsNEdffData.m','Indetermin
 %Cutting the whole trace based of individual units/trials (FOR NON-ENSEMBLE GROUP)
 [cutUpNonEnsembleCellsDff] = TrialWiseDffAndSpikeCutUpNonEnselble(EnsembleAnalysisParams,dffDataPooled,nonEnsembleDff,unitChunks);
 
-close(f)
-close(d)
-clear f d
+% close(f)
+% close(d)
+% clear f d
 
 
 grandDatabaseForEnsemblevsNonEnsemble.EnsembleCellsDff = ensembleDff;

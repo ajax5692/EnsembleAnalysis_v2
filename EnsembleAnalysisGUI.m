@@ -217,6 +217,13 @@ while EnsembleAnalysisParams.isSVDOutputLoaded == 0;
         cd(filePath)
         load(fileName)
         EnsembleAnalysisParams.coreSVD = OUT.coreSVD;
+        
+        %Load the relevant poolSVDcoords.mat file
+        [filename,folderpath] = uigetfile('*.mat','Select appropriate poolSVDcoords.mat file');
+        cd(folderpath)
+        load(filename)
+        
+        EnsembleAnalysisParams.poolSVDcoords = poolSVDcoords;
         EnsembleAnalysisParams.isSVDOutputLoaded = 1;
         cd(EnsembleAnalysisParams.originalCodePath)
         save('ensembleAnalysisParams.mat','EnsembleAnalysisParams')        
