@@ -20,7 +20,4 @@ for cellIndex = 1:size(nonEnsembleCellIndices,1)
     nonEnsembleDff(cellCounter,:) = dffDataPooled(nonEnsembleCellIndices(cellIndex),:);
     cellCounter = cellCounter + 1;
         
-    else
-        continue
-    end
 end

@@ -27,10 +27,6 @@ whichEnsemble = EnsembleAnalysisParams.whichEnsemble;
 %Cutting the whole trace based of individual units/trials (FOR NON-ENSEMBLE GROUP)
 [cutUpNonEnsembleCellsDff] = TrialWiseDffAndSpikeCutUpNonEnselble(EnsembleAnalysisParams,dffDataPooled,nonEnsembleDff,unitChunks);
 
-% close(f)
-% close(d)
-% clear f d
-
 
 grandDatabaseForEnsemblevsNonEnsemble.EnsembleCellsDff = ensembleDff;
 grandDatabaseForEnsemblevsNonEnsemble.NonEnsembleCellsDff = nonEnsembleDff;
