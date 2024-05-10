@@ -39,7 +39,7 @@ xlim([0 EnsembleAnalysisParams.totalFramesPerUnit])
 try
     xregion(EnsembleAnalysisParams.visStimStartFrame,EnsembleAnalysisParams.visStimEndFrame)
 catch
-   yAx = ylim([-0.05 0.25]);
+   ylim([-0.05 0.25]);
 end
 legend(Legend)
 xlabel('Frame #')
